@@ -1,6 +1,6 @@
-FROM ubuntu:20.04 as build
+FROM ubuntu:22.04 as build
 
-ARG QUARTUS_URL=https://cdrdv2.intel.com/v1/dl/getContent/785085/785097?filename=Quartus-lite-22.1std.2.922-linux.tar&inlineAccept=true
+ARG QUARTUS_URL=https://cdrdv2.intel.com/v1/dl/getContent/795187/795204?filename=Quartus-lite-23.1std.0.991-linux.tar&inlineAccept=true
 
 # First, get wget so we can download Quartus
 RUN apt-get update && apt-get install -y wget
@@ -23,7 +23,7 @@ RUN quartus_install/setup.sh --mode unattended --accept_eula 1 --installdir ${QU
     && rm -rf quartus_install && chmod -R a+rx ${QUARTUS_DIR}
 
 # Flatten image
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Need to redefine the quartus dir since this is a new stage.
 ARG QUARTUS_DIR="/quartus"
@@ -31,7 +31,6 @@ COPY --from=build /${QUARTUS_DIR} /${QUARTUS_DIR}
 
 # Install packages necessary for Quartus to work
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
     libglib2.0-0 \
     libpng-dev \
     libfreetype6 \
@@ -47,18 +46,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     default-jre \
 # needed for normal init environment
     dumb-init \
-# needed to add the libpng12 repository
-    software-properties-common \
-# Need to manually get libpng12   
-    && add-apt-repository ppa:linuxuprising/libpng12 \
-    && apt update \
-    && apt install libpng12-0 \
 # Generate the en_US locale
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen en_US.UTF-8 \
     && update-locale LANG=en_US.UTF-8 \
-# Remove wget from final image
-    && apt-get remove -y wget \
 # cleanup apt-list
     && rm -rf /var/lib/apt/lists/*
 
